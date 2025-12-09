@@ -1,0 +1,33 @@
+# Добавь этот блок в твой nginx конфиг для giftbox.ab-education.ru
+# ПЕРЕД блоками location со статикой
+
+    # Proxy для Cloud Functions (исправление CORS)
+    location /api/ {
+        proxy_pass https://functions.poehali.dev/;
+        proxy_set_header Host functions.poehali.dev;
+        proxy_ssl_server_name on;
+        proxy_ssl_protocols TLSv1.2 TLSv1.3;
+        
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Таймауты для долгих запросов
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        
+        # CORS headers (на всякий случай)
+        add_header Access-Control-Allow-Origin * always;
+        add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS" always;
+        add_header Access-Control-Allow-Headers "Content-Type, X-User-Id, X-Auth-Token" always;
+        
+        # OPTIONS для preflight
+        if ($request_method = 'OPTIONS') {
+            add_header Access-Control-Allow-Origin *;
+            add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS";
+            add_header Access-Control-Allow-Headers "Content-Type, X-User-Id, X-Auth-Token";
+            add_header Access-Control-Max-Age 86400;
+            return 204;
+        }
+    }
