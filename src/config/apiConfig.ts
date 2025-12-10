@@ -1,6 +1,5 @@
 const getApiUrl = (functionId: string) => {
-  const isProd = import.meta.env.PROD;
-  return isProd ? `/api/functions/${functionId}` : `https://functions.poehali.dev/${functionId}`;
+  return `/api/functions/${functionId}`;
 };
 
 export const API_CONFIG = {
