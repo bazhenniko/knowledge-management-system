@@ -119,17 +119,55 @@ def handle_list(conn, params):
         return error_response(400, f'List error: {str(e)}')
 
 def handle_stats(conn, params):
+    # Получаем схему из параметров или используем схему с префиксом t_p
+    schema = params.get('schema')
+    
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("""
+            # Если схема не указана, найдём все схемы с t_p
+            if not schema:
+                cur.execute("""
+                    SELECT schema_name 
+                    FROM information_schema.schemata 
+                    WHERE schema_name LIKE 't_p%'
+                    LIMIT 1
+                """)
+                result = cur.fetchone()
+                schema = result['schema_name'] if result else 'public'
+            
+            # Получаем таблицы из схемы
+            cur.execute(f"""
                 SELECT table_name, 
                        (SELECT COUNT(*) FROM information_schema.columns 
-                        WHERE table_name = t.table_name) as column_count
+                        WHERE table_schema = '{schema}' AND table_name = t.table_name) as column_count
                 FROM information_schema.tables t
-                WHERE table_schema = 'public'
+                WHERE table_schema = '{schema}'
+                ORDER BY table_name
             """)
             tables = cur.fetchall()
-            return success_response({'tables': tables})
+            
+            # Подсчитываем записи в каждой таблице
+            total_records = 0
+            table_list = []
+            for table in tables:
+                table_name = table['table_name']
+                cur.execute(f'SELECT COUNT(*) as count FROM "{schema}"."{table_name}"')
+                count_row = cur.fetchone()
+                record_count = count_row['count'] if count_row else 0
+                total_records += record_count
+                
+                table_list.append({
+                    'table_name': table_name,
+                    'column_count': table['column_count'],
+                    'record_count': record_count
+                })
+            
+            return success_response({
+                'tables': table_list,
+                'totalTables': len(table_list),
+                'totalRecords': total_records,
+                'schema': schema
+            })
     except psycopg2.Error as e:
         return error_response(400, f'Stats error: {str(e)}')
 
