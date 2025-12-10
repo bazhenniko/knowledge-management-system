@@ -35,8 +35,6 @@ import PasswordResetPage from "./pages/PasswordResetPage";
 import KnowledgeManagement from "./pages/KnowledgeManagement";
 import { GlobalConsoleLogger } from "./components/admin/GlobalConsoleLogger";
 import { DataProvider } from "./contexts/DataContext";
-import GiftBoxes from "./pages/GiftBoxes";
-import ChatSupport from "./pages/ChatSupport";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -85,8 +83,6 @@ const App = () => (
             <Route path="/db-stats" element={<DatabaseStatsPage />} />
             <Route path="/reset-password" element={<PasswordResetPage />} />
             <Route path="/knowledge" element={<KnowledgeManagement />} />
-            <Route path="/gift-boxes" element={<GiftBoxes />} />
-            <Route path="/chat" element={<ChatSupport />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
